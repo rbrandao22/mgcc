@@ -1,0 +1,24 @@
+# gcc, boost & libpqxx
+
+FROM debian:buster
+
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+
+RUN ln -fs /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
+RUN dpkg-reconfigure -f noninteractive tzdata
+
+RUN apt-get update\
+		&& apt-get install -y --no-install-recommends apt-utils\
+		&& apt-get install -y postgresql postgresql-client\
+		build-essential libpq-dev
+
+COPY boost_1_73_0 /usr/local/include/boost_1_73_0
+RUN cd /usr/local/include/boost_1_73_0 && ./bootstrap.sh --with-libraries=serialization\
+		&& ./b2 install
+		
+COPY libpqxx /libpqxx
+RUN cd /libpqxx; ./configure --disable-documentation && make -j 2 && make install\
+		&& cd ..; rm -rf libpqxx
+		
+ENV LD_LIBRARY_PATH /usr/local/lib
